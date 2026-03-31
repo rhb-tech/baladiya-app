@@ -18,14 +18,12 @@ st.markdown(
     <style>
     .stApp {{
         background: linear-gradient(
-            rgba(255,255,255,0.95),
-            rgba(255,255,255,0.95)
-        ),
-        url("data:image/png;base64,{logo_base64}");
+    rgba(255,255,255,0.85),
+    rgba(255,255,255,0.85)
+),
+url("data:image/png;base64,{logo_base64}");
 
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 300px;
+background-size: 400px;
     }}
     </style>
     """,
