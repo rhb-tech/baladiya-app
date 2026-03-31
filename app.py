@@ -5,15 +5,16 @@ import base64
 
 # ---- CONFIG ----
 VAT_RATE = 1.15
+BRAND_RED = "#B22222"
 
-# ---- LOAD LOGO AS BASE64 ----
+# ---- LOAD LOGO ----
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
 logo_base64 = get_base64_of_bin_file("logo.png")
 
-# ---- CUSTOM STYLING ----
+# ---- STYLING ----
 st.markdown(
     f"""
     <style>
@@ -35,13 +36,21 @@ st.markdown(
         background-size: 400px;
     }}
 
-    h1, h2, h3 {{
-        color: #C8102E;  /* RED (you can adjust later) */
+    .title {{
+        color: {BRAND_RED};
+        font-size: 42px;
         font-weight: 700;
+        margin-bottom: 5px;
+    }}
+
+    .subtitle {{
+        font-size: 16px;
+        color: #555;
+        margin-bottom: 20px;
     }}
 
     .stButton>button {{
-        background-color: #C8102E;
+        background-color: {BRAND_RED};
         color: white;
         border-radius: 8px;
         border: none;
@@ -50,7 +59,7 @@ st.markdown(
     }}
 
     .stDownloadButton>button {{
-        background-color: #C8102E;
+        background-color: {BRAND_RED};
         color: white;
         border-radius: 8px;
         border: none;
@@ -64,8 +73,16 @@ st.markdown(
 
 # ---- HEADER ----
 st.image("logo.png", width=150)
-st.title("RHB Monthly Baladiya Report")
-st.write("Upload your CSV file to generate the official report.")
+
+st.markdown(
+    f"<div class='title'>RHB Monthly Baladiya Report</div>",
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    "<div class='subtitle'>Upload your CSV file to generate the official report.</div>",
+    unsafe_allow_html=True
+)
 
 st.markdown("---")
 
