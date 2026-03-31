@@ -5,6 +5,24 @@ from datetime import datetime
 from io import BytesIO
 
 # ---- CONFIG ----
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(
+            rgba(255,255,255,0.95),
+            rgba(255,255,255,0.95)
+        ),
+        url("logo.png");
+
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 300px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 st.image("logo.png", width=200)
 st.markdown("---")
 VAT_RATE = 1.15
