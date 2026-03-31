@@ -5,20 +5,28 @@ from datetime import datetime
 from io import BytesIO
 
 # ---- CONFIG ----
+import base64
+
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+logo_base64 = get_base64_of_bin_file("logo.png")
+
 st.markdown(
-    """
+    f"""
     <style>
-    .stApp {
+    .stApp {{
         background: linear-gradient(
             rgba(255,255,255,0.95),
             rgba(255,255,255,0.95)
         ),
-        url("logo.png");
+        url("data:image/png;base64,{logo_base64}");
 
         background-repeat: no-repeat;
         background-position: center;
         background-size: 300px;
-    }
+    }}
     </style>
     """,
     unsafe_allow_html=True
