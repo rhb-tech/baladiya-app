@@ -1,43 +1,73 @@
-
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 from io import BytesIO
-
-# ---- CONFIG ----
 import base64
 
+# ---- CONFIG ----
+VAT_RATE = 1.15
+
+# ---- LOAD LOGO AS BASE64 ----
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
 logo_base64 = get_base64_of_bin_file("logo.png")
 
+# ---- CUSTOM STYLING ----
 st.markdown(
     f"""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+
+    * {{
+        font-family: 'Cairo', sans-serif !important;
+    }}
+
     .stApp {{
         background: linear-gradient(
-    rgba(255,255,255,0.85),
-    rgba(255,255,255,0.85)
-),
-url("data:image/png;base64,{logo_base64}");
+            rgba(255,255,255,0.85),
+            rgba(255,255,255,0.85)
+        ),
+        url("data:image/png;base64,{logo_base64}");
 
-background-size: 400px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 400px;
+    }}
+
+    h1, h2, h3 {{
+        color: #C8102E;  /* RED (you can adjust later) */
+        font-weight: 700;
+    }}
+
+    .stButton>button {{
+        background-color: #C8102E;
+        color: white;
+        border-radius: 8px;
+        border: none;
+        padding: 10px 20px;
+        font-weight: 600;
+    }}
+
+    .stDownloadButton>button {{
+        background-color: #C8102E;
+        color: white;
+        border-radius: 8px;
+        border: none;
+        padding: 10px 20px;
+        font-weight: 600;
     }}
     </style>
     """,
     unsafe_allow_html=True
 )
-st.image("logo.png", width=200)
-st.markdown("---")
-VAT_RATE = 1.15
 
-st.set_page_config(page_title="Monthly Baladiya Report", layout="centered")
-
+# ---- HEADER ----
+st.image("logo.png", width=150)
 st.title("RHB Monthly Baladiya Report")
+st.write("Upload your CSV file to generate the official report.")
 
-st.write("Upload your CSV file to generate the formatted Excel report.")
+st.markdown("---")
 
 # ---- FILE UPLOAD ----
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
@@ -48,7 +78,6 @@ if uploaded_file:
         df = pd.read_csv(uploaded_file)
 
         st.success("File uploaded successfully!")
-        st.write("Preview:")
         st.dataframe(df.head())
 
         # ---- DETECT APARTMENT COLUMN ----
@@ -108,7 +137,7 @@ if uploaded_file:
 
         df = df[[c for c in final_columns if c in df.columns]]
 
-        # ---- CREATE EXCEL IN MEMORY ----
+        # ---- CREATE EXCEL ----
         output = BytesIO()
 
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -121,7 +150,6 @@ if uploaded_file:
 
         output.seek(0)
 
-        # ---- DOWNLOAD BUTTON ----
         st.success(f"Report ready: {month_year}.xlsx")
 
         st.download_button(
