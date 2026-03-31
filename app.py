@@ -1,14 +1,17 @@
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 from io import BytesIO
 
 # ---- CONFIG ----
+st.image("logo.png", width=200)
+st.markdown("---")
 VAT_RATE = 1.15
 
 st.set_page_config(page_title="Monthly Baladiya Report", layout="centered")
 
-st.title("📊 Monthly Baladiya Report Generator")
+st.title("RHB Monthly Baladiya Report")
 
 st.write("Upload your CSV file to generate the formatted Excel report.")
 
