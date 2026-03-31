@@ -80,7 +80,7 @@ st.markdown(
 )
 
 st.markdown(
-    "<div class='subtitle'>Upload your CSV file to generate the official report.</div>",
+    "<div class='subtitle'>Upload your CSV file to generate the Baladiya report.</div>",
     unsafe_allow_html=True
 )
 
