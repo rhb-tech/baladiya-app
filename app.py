@@ -44,8 +44,9 @@ st.markdown(
     }}
 
     .subtitle {{
-        font-size: 16px;
-        color: #555;
+        color: {BRAND_RED};
+        font-size: 18px;
+        font-weight: 500;
         margin-bottom: 20px;
     }}
 
@@ -71,9 +72,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ---- HEADER ----
-st.image("logo.png", width=150)
-
+# ---- HEADER (LOGO REMOVED) ----
 st.markdown(
     f"<div class='title'>RHB Monthly Baladiya Report</div>",
     unsafe_allow_html=True
