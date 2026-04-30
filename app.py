@@ -20,7 +20,7 @@ def clean_hostaway_data(df):
     df = df.replace({None: "", "None": "", "nan": ""})
     df = df.fillna("")
 
-    # ✅ FIX: replace applymap with apply + map
+    # Strip strings (safe replacement for applymap)
     df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x))
 
     # Numeric columns
@@ -113,11 +113,13 @@ if uploaded_file:
     try:
         df = pd.read_csv(uploaded_file)
 
-        # ✅ CLEAN DATA
+        # ---- CLEAN DATA ----
         df = clean_hostaway_data(df)
 
         st.success("File uploaded successfully!")
-        st.dataframe(df.head())
+
+        # ✅ FIX: Streamlit Arrow error
+        st.dataframe(df.head().astype(str))
 
         # ---- VALIDATION ----
         required_cols = ["Total price", "Check-out date"]
@@ -169,12 +171,15 @@ if uploaded_file:
         # ---- EXPORT ----
         output = BytesIO()
 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name="All Data", index=False)
+        # ✅ FIX: ensure export-safe types
+        df_export = df.copy().astype(str)
 
-            if "Area/Neighborhood" in df.columns:
-                for area in df["Area/Neighborhood"].dropna().unique():
-                    df[df["Area/Neighborhood"] == area].to_excel(
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_export.to_excel(writer, sheet_name="All Data", index=False)
+
+            if "Area/Neighborhood" in df_export.columns:
+                for area in df_export["Area/Neighborhood"].dropna().unique():
+                    df_export[df_export["Area/Neighborhood"] == area].to_excel(
                         writer,
                         sheet_name=str(area)[:31],
                         index=False
