@@ -20,8 +20,8 @@ def clean_hostaway_data(df):
     df = df.replace({None: "", "None": "", "nan": ""})
     df = df.fillna("")
 
-    # Trim strings
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    # ✅ FIX: replace applymap with apply + map
+    df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x))
 
     # Numeric columns
     numeric_cols = [
@@ -36,7 +36,7 @@ def clean_hostaway_data(df):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-    # Dates
+    # Date columns
     for col in ["Check-in date", "Check-out date"]:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors="coerce")
@@ -113,7 +113,7 @@ if uploaded_file:
     try:
         df = pd.read_csv(uploaded_file)
 
-        # 🔥 CLEAN DATA
+        # ✅ CLEAN DATA
         df = clean_hostaway_data(df)
 
         st.success("File uploaded successfully!")
