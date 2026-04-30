@@ -14,13 +14,25 @@ def get_base64_of_bin_file(bin_file):
 
 logo_base64 = get_base64_of_bin_file("logo.png")
 
+# ---- SAFE STRING CONVERSION (pandas 3.0 compatible) ----
+def safe_to_str(df):
+    """
+    Safely convert all columns to plain Python str.
+    Handles pandas 3.0 StringDtype, NaT, NA, NaN, and mixed-type columns.
+    Returns a plain object-dtype DataFrame suitable for Arrow/Streamlit/Excel.
+    """
+    result = pd.DataFrame(index=df.index)
+    for col in df.columns:
+        result[col] = df[col].apply(lambda x: "" if pd.isna(x) else str(x))
+    return result
+
 # ---- CLEANING FUNCTION ----
 def clean_hostaway_data(df):
     # Normalize nulls
     df = df.replace({None: "", "None": "", "nan": ""})
     df = df.fillna("")
 
-    # Strip strings (safe replacement for applymap)
+    # Strip strings
     df = df.apply(lambda col: col.map(lambda x: x.strip() if isinstance(x, str) else x))
 
     # Numeric columns
@@ -46,21 +58,25 @@ def clean_hostaway_data(df):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(1)
 
-    # Ensure unit column
+    # Ensure unit column exists as string
     if "MultiUnit Unit Names" not in df.columns:
         df["MultiUnit Unit Names"] = ""
+    else:
+        # Force to string — pandas 3.0 may read this as int64 if values are numeric
+        df["MultiUnit Unit Names"] = df["MultiUnit Unit Names"].astype(object).apply(
+            lambda x: "" if pd.isna(x) else str(x)
+        )
 
-    # Fill missing unit names
+    # Fill missing unit names from fallback apartment column
     possible_apartment_cols = [
         "Apartment Number", "Apartment No", "Apartment",
         "Unit Number", "Unit No", "Unit"
     ]
-
     apartment_col = next((c for c in possible_apartment_cols if c in df.columns), None)
 
     if apartment_col:
         mask = df["MultiUnit Unit Names"].astype(str).str.strip() == ""
-        df.loc[mask, "MultiUnit Unit Names"] = df.loc[mask, apartment_col]
+        df.loc[mask, "MultiUnit Unit Names"] = df.loc[mask, apartment_col].astype(str)
 
     return df
 
@@ -111,15 +127,18 @@ uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file)
+        # FIX: dtype=object prevents pandas 3.0 from using StringDtype/int64
+        # for columns that should be treated as plain strings.
+        df = pd.read_csv(uploaded_file, dtype=object)
 
         # ---- CLEAN DATA ----
         df = clean_hostaway_data(df)
 
         st.success("File uploaded successfully!")
 
-        # ✅ FIX: Streamlit Arrow error
-        st.dataframe(df.head().astype(str))
+        # FIX: use safe_to_str instead of astype(str) to avoid Arrow serialization
+        # errors caused by pandas 3.0 StringDtype with NaN/NaT values.
+        st.dataframe(safe_to_str(df.head()))
 
         # ---- VALIDATION ----
         required_cols = ["Total price", "Check-out date"]
@@ -131,10 +150,10 @@ if uploaded_file:
 
         # ---- NET REVENUE ----
         df["Net Revenue"] = (
-            df.get("Total price", 0)
-            - df.get("Airbnb Listing host fee", 0)
-            - df.get("Airbnb listing cleaning fee", 0)
-            + df.get("Cancellation payout", 0)
+            df.get("Total price", pd.Series(0, index=df.index))
+            - df.get("Airbnb Listing host fee", pd.Series(0, index=df.index))
+            - df.get("Airbnb listing cleaning fee", pd.Series(0, index=df.index))
+            + df.get("Cancellation payout", pd.Series(0, index=df.index))
         )
 
         # ---- VAT ----
@@ -171,19 +190,20 @@ if uploaded_file:
         # ---- EXPORT ----
         output = BytesIO()
 
-        # ✅ FIX: ensure export-safe types
-        df_export = df.copy().astype(str)
+        # FIX: use safe_to_str instead of astype(str) for reliable Excel export
+        df_export = safe_to_str(df)
 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df_export.to_excel(writer, sheet_name="All Data", index=False)
 
             if "Area/Neighborhood" in df_export.columns:
                 for area in df_export["Area/Neighborhood"].dropna().unique():
-                    df_export[df_export["Area/Neighborhood"] == area].to_excel(
-                        writer,
-                        sheet_name=str(area)[:31],
-                        index=False
-                    )
+                    if area and area != "":
+                        df_export[df_export["Area/Neighborhood"] == area].to_excel(
+                            writer,
+                            sheet_name=str(area)[:31],
+                            index=False
+                        )
 
         output.seek(0)
 
